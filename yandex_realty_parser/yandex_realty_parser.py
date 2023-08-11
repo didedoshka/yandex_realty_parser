@@ -2,7 +2,14 @@ import requests
 from tqdm import tqdm
 from bs4 import BeautifulSoup
 import re
-import time
+from ratelimit import limits, sleep_and_retry
+
+
+@sleep_and_retry
+@limits(calls=1, period=5)
+def get(*args, **kwargs):
+    return requests.get(*args, **kwargs)
+
 
 def parse(link: str,
           headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/116.0',
@@ -13,10 +20,10 @@ def parse(link: str,
     flats = []
     amount_of_flats = 0
     if end_page is None:
-        end_page = int(re.search('page=(\d+)', requests.get(link + '&page=500', headers=headers).url).group(1)) + 1
+        end_page = int(re.search('page=(\d+)', get(link + '&page=500', headers=headers).url).group(1)) + 1
     for page in (pbar := tqdm(range(start_page, end_page + 1))):
         pbar.set_description(f'Page: {page}', refresh=True)
-        html = requests.get(link + f'&page={page-1}', headers=headers).text
+        html = get(link + f'&page={page-1}', headers=headers).text
         soup = BeautifulSoup(html, features='lxml')
         flats_on_page = soup.find_all(class_=re.compile('Item__info-inner$'))
         amount_of_flats_on_page = len(flats_on_page)
@@ -31,7 +38,6 @@ def parse(link: str,
             tqdm.write(f'Exception: There isn\'t page {page+1}. Aborting...')
             break
         pbar.set_postfix({'flats': amount_of_flats})
-        time.sleep(5) # sleep to not get banned by yandex
 
     return flats
 
