@@ -8,11 +8,11 @@ version = "0.1.0"
 authors = [
     {name = "Dmitriy Gorokhov", email = "didedoshka@gmail.com"},
 ]
-description = "My package description"
+description = "Library that parses yandex realty website"
 readme = "README.md"
 requires-python = ">=3.7"
 keywords = ["realty", "parse"]
-license = "MIT"
+license = {file = "LICENSE"}
 dependencies = [
     "beautifulsoup4",
     "requests",
