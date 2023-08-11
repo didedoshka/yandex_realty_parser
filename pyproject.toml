@@ -15,6 +15,7 @@ keywords = ["realty", "parse"]
 license = "MIT"
 dependencies = [
     "beautifulsoup4",
-    "requests"
+    "requests",
+    "tqdm"
 ]
 
