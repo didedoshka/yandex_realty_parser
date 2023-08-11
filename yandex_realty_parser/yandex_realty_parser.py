@@ -15,6 +15,7 @@ def parse(link: str,
     if end_page is None:
         end_page = int(re.search('page=(\d+)', requests.get(link + '&page=500', headers=headers).url).group(1)) + 1
     for page in (pbar := tqdm(range(start_page, end_page + 1))):
+        pbar.set_description(f'Page: {page}', refresh=True)
         html = requests.get(link + f'&page={page-1}', headers=headers).text
         soup = BeautifulSoup(html, features='lxml')
         flats_on_page = soup.find_all(class_=re.compile('Item__info-inner$'))
@@ -24,17 +25,16 @@ def parse(link: str,
         data['link'] = ['https://realty.ya.ru' + x.a['href'] for x in flats_on_page]
         data['address'] = [' '.join(list(map(lambda y: y.text, x.find(
             class_=re.compile('address$')).find_all('a')))) for x in flats_on_page]
-        flats.extend([{'link': x, 'address': y} for x, y in zip(data['link'], data['address'])])
+        flats.extend(({'link': x, 'address': y} for x, y in zip(data['link'], data['address'])))
         is_next = soup.find(string='Следующая')
-        if is_next is None:
+        if is_next is None and page != end_page:
             tqdm.write(f'Exception: There isn\'t page {page+1}. Aborting...')
             break
         pbar.set_postfix({'flats': amount_of_flats})
         time.sleep(5) # sleep to not get banned by yandex
 
-    print(flats)
     return flats
 
 
 if __name__ == "__main__":
-    parse('https://realty.ya.ru/moskva/snyat/kvartira/odnokomnatnaya/?priceMax=42500&priceMin=38500', start_page=23)
+    parse('https://realty.ya.ru/moskva/snyat/kvartira/odnokomnatnaya/?priceMax=42500&priceMin=38500', start_page=24)
