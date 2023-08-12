@@ -34,6 +34,8 @@ def parse(link: str,
         if 'address' in fields:
             data['address'] = [' '.join(list(map(lambda y: y.text, x.find(
                 class_=re.compile('address$')).find_all('a')))) for x in flats_on_page]
+        if 'price' in fields:
+            data['price'] = [int(x.find(class_='price').text.replace('\xa0', '').replace('₽', '')) for x in flats_on_page]
 
         flats.extend(({fields[i]: args[i] for i in range(len(fields))} for args in zip(*[data[x] for x in fields])))
         is_next = soup.find(string='Следующая')
