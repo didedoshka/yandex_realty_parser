@@ -29,10 +29,13 @@ def parse(link: str,
         amount_of_flats_on_page = len(flats_on_page)
         amount_of_flats += amount_of_flats_on_page
         data = {}
-        data['link'] = ['https://realty.ya.ru' + x.a['href'] for x in flats_on_page]
-        data['address'] = [' '.join(list(map(lambda y: y.text, x.find(
-            class_=re.compile('address$')).find_all('a')))) for x in flats_on_page]
-        flats.extend(({'link': x, 'address': y} for x, y in zip(data['link'], data['address'])))
+        if 'link' in fields:
+            data['link'] = ['https://realty.ya.ru' + x.a['href'] for x in flats_on_page]
+        if 'address' in fields:
+            data['address'] = [' '.join(list(map(lambda y: y.text, x.find(
+                class_=re.compile('address$')).find_all('a')))) for x in flats_on_page]
+
+        flats.extend(({fields[i]: args[i] for i in range(len(fields))} for args in zip(*[data[x] for x in fields])))
         is_next = soup.find(string='Следующая')
         if is_next is None and page != end_page:
             tqdm.write(f'Exception: There isn\'t page {page+1}. Aborting...')
