@@ -3,7 +3,7 @@ from tqdm import tqdm
 from bs4 import BeautifulSoup
 import re
 from ratelimit import limits, sleep_and_retry
-
+import math
 
 @sleep_and_retry
 @limits(calls=1, period=5)
@@ -16,7 +16,7 @@ def parse(link: str,
                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                    'Accept-Language': 'en-GB,en;q=0.5',
                    'Accept-Encoding': 'gzip, deflate, br'},
-          start_page=1, end_page=None, fields=('link', 'address')):
+          start_page=1, end_page=None, fields=('link', 'address', 'area', 'price')):
     flats = []
     amount_of_flats = 0
     if end_page is None:
@@ -35,7 +35,10 @@ def parse(link: str,
             data['address'] = [' '.join(list(map(lambda y: y.text, x.find(
                 class_=re.compile('address$')).find_all('a')))) for x in flats_on_page]
         if 'price' in fields:
-            data['price'] = [int(x.find(class_='price').text.replace('\xa0', '').replace('₽', '')) for x in flats_on_page]
+            data['price'] = [int(x.find(class_='price').text.replace('\xa0', '').replace('₽', ''))
+                             for x in flats_on_page]
+        if 'area' in fields:
+            data['area'] = [math.ceil(float(re.search('(.*).м²', x.find(class_=re.compile('title$')).text).group(1).replace(',', '.'))) for x in flats_on_page]
 
         flats.extend(({fields[i]: args[i] for i in range(len(fields))} for args in zip(*[data[x] for x in fields])))
         is_next = soup.find(string='Следующая')
